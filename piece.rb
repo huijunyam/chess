@@ -2,6 +2,7 @@ require_relative 'board'
 require 'singleton'
 
 module SlidingPiece
+  attr_reader :color
 
   def moves
     directions = []
@@ -11,7 +12,7 @@ module SlidingPiece
     if move_dirs.include?(:horizontal_vertical)
       directions += horizontal_vertical_dirs
     end
-    directions
+    directions.map { |pos| [pos[0] + self.pos[0], pos[1] + self.pos[1]] }
   end
 
   def horizontal_vertical_dirs
@@ -103,14 +104,17 @@ module SlidingPiece
 end
 
 module SteppingPiece
+  attr_reader :color
+
   def moves
     if self.is_a?(Knight)
-      [[1, 2], [-1, 2], [-1, -2], [1, -2],
-       [2, 1], [2, -1], [-2, -1], [-2, 1]]
+      directions = [[1, 2], [-1, 2], [-1, -2], [1, -2],
+                    [2, 1], [2, -1], [-2, -1], [-2, 1]]
     elsif self.is_a?(King)
-      [[1, 0], [-1, 0], [-1, -1], [1, 1],
-       [-1, 1], [1, -1], [0, -1], [0, 1]]
+      directions = [[1, 0], [-1, 0], [-1, -1], [1, 1],
+                    [-1, 1], [1, -1], [0, -1], [0, 1]]
     end
+    directions.map { |pos| [pos[0] + self.pos[0], pos[1] + self.pos[1]] }
   end
 end
 
@@ -142,8 +146,7 @@ class King < Piece
 
   def initialize(pos, board, color)
     @color = color
-    color == @symbol = :black ? "\u265A" : "\u2654"
-    #color == :black ? @pos = [0, 3] : [7, 3]
+    @symbol = color == :black ? "\u265A" : "\u2654"
     super(pos, board, @symbol)
   end
 
@@ -154,15 +157,18 @@ class Knight < Piece
 
   def initialize(pos, board, color)
     @color = color
-    color == @symbol = :black ? "\u265E" : "\u2658"
+    @symbol = color == :black ? "\u265E" : "\u2658"
     super(pos, board, @symbol)
   end
 end
 
 class Pawn < Piece
+  attr_reader :color, :moves
+
   def initialize(pos, board, color)
     @color = color
-    color == @symbol = :black ? ("\u265F") : ("\u2659")
+    @symbol = color == :black ? "\u265F" : "\u2659"
+    @moves = []
     super(pos, board, @symbol)
   end
 end
@@ -172,7 +178,7 @@ class Bishop < Piece
 
   def initialize(pos, board, color)
     @color = color
-    color == @symbol = :black ? "\u265D" : "\u2657"
+    @symbol = color == :black ? "\u265D" : "\u2657"
     super(pos, board, @symbol)
   end
 
@@ -186,7 +192,7 @@ class Rook < Piece
 
   def initialize(pos, board, color)
     @color = color
-    color == @symbol = :black ? "\u265C" : "\u2656"
+    @symbol = color == :black ? "\u265C" : "\u2656"
     super(pos, board, @symbol)
   end
 
@@ -200,7 +206,7 @@ class Queen < Piece
 
   def initialize(pos, board, color)
     @color = color
-    color == @symbol = :black ? "\u265B" : "\u2655"
+    @symbol = color == :black ? "\u265B" : "\u2655"
     super(pos, board, @symbol)
   end
 
@@ -211,9 +217,11 @@ end
 
 class NullPiece < Piece
   include Singleton
+  attr_reader :color, :symbol, :moves
 
   def initialize
     @color = nil
     @symbol = " "
+    @moves = []
   end
 end

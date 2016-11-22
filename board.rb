@@ -48,7 +48,7 @@ class Board
   end
 
   def place_royal_piece(pos)
-    pos[0] == color = 0 ? :black : :white
+    color = pos[0] == 0 ? :black : :white
     case STARTING_POS[pos]
     when :rook
       return Rook.new(pos, self, color)
@@ -67,7 +67,7 @@ class Board
     # raise ArgumentError.new("No piece at start position") if self[start_pos].is_a?(NullPiece)
     # raise ArgumentError.new("Piece cannot move there") unless self[start_pos].valid_move?(end_pos)
     self[end_pos] = self[start_pos]
-    self[start_pos] = NullPiece.new
+    self[start_pos] = NullPiece.instance
   end
 
   def [](pos)
@@ -82,6 +82,27 @@ class Board
 
   def in_bounds?(pos)
     pos.all? { |el| el.between?(0, 7) }
+  end
+
+  def in_check?(color)
+    @grid.each do |row|
+      if row.any? { |piece| piece.color != color && piece.moves.include?(pos) }
+        return true
+      end
+    end
+    false
+  end
+
+  def find_king(color)
+    @grid.each_with_index do |row, i|
+      row.each_with_index do |el, j|
+        # byebug
+        if el.is_a?(King) && el.color == color
+          return [i, j]
+        end
+      end
+    end
+    nil
   end
 
 end
