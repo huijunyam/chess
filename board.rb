@@ -1,27 +1,66 @@
 require_relative 'piece'
 require 'byebug'
 
+STARTING_POS = {
+  [0, 0] => :rook,
+  [0, 1] => :knight,
+  [0, 2] => :bishop,
+  [0, 3] => :king,
+  [0, 4] => :queen,
+  [0, 5] => :bishop,
+  [0, 6] => :knight,
+  [0, 7] => :rook,
+  [7, 0] => :rook,
+  [7, 1] => :knight,
+  [7, 2] => :bishop,
+  [7, 3] => :king,
+  [7, 4] => :queen,
+  [7, 5] => :bishop,
+  [7, 6] => :knight,
+  [7, 7] => :rook
+}
 class Board
+
   attr_reader :grid
 
-  def initialize(grid = Board.default_board)
+  def initialize(grid = Array.new(8) { Array.new(8) } )
     @grid = grid
+    place_default_piece
   end
 
-  def self.default_board
-    board = Array.new(8) { Array.new(8) }
-    board[0..1].each_with_index do |row, i|
+  def place_default_piece
+    @grid.each_with_index do |row, i|
       row.each_with_index do |_, j|
-        board[i][j] = Piece.new
+        case i
+        when 0
+          @grid[i][j] = place_royal_piece([i, j])
+        when 7
+          @grid[i][j] = place_royal_piece([i, j])
+        when 1
+          @grid[i][j] = Pawn.new([i, j], self, :black)
+        when 6
+          @grid[i][j] = Pawn.new([i, j], self, :white)
+        else
+          @grid[i][j] = NullPiece.instance
+        end
       end
     end
-    board[6..7].each_with_index do |row, i|
-      row.each_with_index do |_, j|
-        board[i + 6][j] = Piece.new
-      end
+  end
+
+  def place_royal_piece(pos)
+    pos[0] == color = 0 ? :black : :white
+    case STARTING_POS[pos]
+    when :rook
+      return Rook.new(pos, self, color)
+    when :knight
+      return Knight.new(pos, self, color)
+    when :bishop
+      return Bishop.new(pos, self, color)
+    when :king
+      return King.new(pos, self, color)
+    when :queen
+      return Queen.new(pos, self, color)
     end
-    board
-    # Board.new(board)
   end
 
   def move_piece(start_pos, end_pos)

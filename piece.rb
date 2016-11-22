@@ -42,12 +42,33 @@ module SlidingPiece
     elsif dy == 0
       check_horizontal(dx)
     else
-
+      check_diagonal(dx, dy)
     end
   end
 
   def check_diagonal(dx, dy)
-    
+    if dx > 0 && dy > 0
+      dy.times do |i|
+        next_pos = [self.pos.first + (i + 1), self.pos.last + (i + 1)]
+        return false unless board[next_pos].is_a?(NullPiece)
+      end
+    elsif dx < 0 && dy < 0
+      dy.abs.times do |i|
+        next_pos = [self.pos.first - (i + 1), self.pos.last - (i + 1)]
+        return false unless board[next_pos].is_a?(NullPiece)
+      end
+    elsif dx > 0 && dy < 0
+      dx.times do |i|
+        next_pos = [self.pos.first + (i + 1), self.pos.last - (i + 1)]
+        return false unless board[next_pos].is_a?(NullPiece)
+      end
+    elsif dx < 0 && dy > 0
+      dy.times do |i|
+        next_pos = [self.pos.first - (i + 1), self.pos.last + (i + 1)]
+        return false unless board[next_pos].is_a?(NullPiece)
+      end
+    end
+    true
   end
 
   def check_vertical(dy)
@@ -121,7 +142,8 @@ class King < Piece
 
   def initialize(pos, board, color)
     @color = color
-    color == :black ? @symbol = "\u265A" : "\u2654"
+    color == @symbol = :black ? "\u265A" : "\u2654"
+    #color == :black ? @pos = [0, 3] : [7, 3]
     super(pos, board, @symbol)
   end
 
@@ -132,12 +154,17 @@ class Knight < Piece
 
   def initialize(pos, board, color)
     @color = color
-    color == :black ? @symbol = "\u265E" : "\u2658"
+    color == @symbol = :black ? "\u265E" : "\u2658"
     super(pos, board, @symbol)
   end
 end
 
 class Pawn < Piece
+  def initialize(pos, board, color)
+    @color = color
+    color == @symbol = :black ? ("\u265F") : ("\u2659")
+    super(pos, board, @symbol)
+  end
 end
 
 class Bishop < Piece
@@ -145,7 +172,7 @@ class Bishop < Piece
 
   def initialize(pos, board, color)
     @color = color
-    color == :black ? @symbol = "\u265D" : "\u2657"
+    color == @symbol = :black ? "\u265D" : "\u2657"
     super(pos, board, @symbol)
   end
 
@@ -159,7 +186,7 @@ class Rook < Piece
 
   def initialize(pos, board, color)
     @color = color
-    color == :black ? @symbol = "\u265C" : "\u2656"
+    color == @symbol = :black ? "\u265C" : "\u2656"
     super(pos, board, @symbol)
   end
 
@@ -173,7 +200,7 @@ class Queen < Piece
 
   def initialize(pos, board, color)
     @color = color
-    color == :black ? @symbol = "\u265B" : "\u2655"
+    color == @symbol = :black ? "\u265B" : "\u2655"
     super(pos, board, @symbol)
   end
 

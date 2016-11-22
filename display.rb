@@ -24,12 +24,12 @@ class Display
     print "| "
     row.each_with_index do |el, i|
       if @cursor.cursor_pos == [idx, i]
-        print el.to_s.colorize(:color => :white, :background => :blue)
+        print el.to_s.colorize(:background => :blue)
       else
         if i.even?
-          print el.to_s.colorize(:color => :black, :background => :white)
+          print el.to_s.colorize(:background => :white)
         else
-          print el.to_s.colorize(:color => :white, :background => :black)
+          print el.to_s.colorize(:background => :black)
         end
       end
       print " | "
@@ -40,12 +40,12 @@ class Display
     print "| "
     row.each_with_index do |el, i|
       if @cursor.cursor_pos == [idx, i]
-        print el.to_s.colorize(:color => :white, :background => :blue)
+        print el.to_s.colorize(:background => :blue)
       else
         if i.odd?
-          print el.to_s.colorize(:color => :black, :background => :white)
+          print el.to_s.colorize(:background => :white)
         else
-          print el.to_s.colorize(:color => :white, :background => :black)
+          print el.to_s.colorize(:background => :black)
         end
       end
       print " | "
