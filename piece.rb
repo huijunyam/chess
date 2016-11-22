@@ -1,8 +1,9 @@
+require 'byebug'
 require_relative 'board'
 require 'singleton'
 
 module SlidingPiece
-  attr_reader :color
+  attr_reader :color, :moves
 
   def moves
     directions = []
@@ -12,6 +13,8 @@ module SlidingPiece
     if move_dirs.include?(:horizontal_vertical)
       directions += horizontal_vertical_dirs
     end
+    directions.select! { |pos| @board.in_bounds?([pos[0] + self.pos[0], pos[1] + self.pos[1]]) }
+    directions.select! { |move| self.unblocked_move?(move[0], move[1]) }
     directions.map { |pos| [pos[0] + self.pos[0], pos[1] + self.pos[1]] }
   end
 
@@ -37,7 +40,7 @@ module SlidingPiece
     directions
   end
 
-  def unblocked_moves(dx, dy)
+  def unblocked_move?(dx, dy)
     if dx == 0
       check_vertical(dy)
     elsif dy == 0
@@ -104,7 +107,7 @@ module SlidingPiece
 end
 
 module SteppingPiece
-  attr_reader :color
+  attr_reader :color, :moves
 
   def moves
     if self.is_a?(Knight)
@@ -114,8 +117,15 @@ module SteppingPiece
       directions = [[1, 0], [-1, 0], [-1, -1], [1, 1],
                     [-1, 1], [1, -1], [0, -1], [0, 1]]
     end
+    directions.select! { |pos| @board.in_bounds?([pos[0] + self.pos[0], pos[1] + self.pos[1]]) }
+    directions.select! { |move| self.unblocked_move?(move[0], move[1]) }
     directions.map { |pos| [pos[0] + self.pos[0], pos[1] + self.pos[1]] }
   end
+
+  def unblocked_move?(dx, dy)
+    return true unless @board[[self.pos[0] + dx, self.pos[1] + dy]].color == self.color
+  end
+
 end
 
 class Piece
@@ -136,7 +146,16 @@ class Piece
   end
 
   def valid_moves
+    self.moves.reject { |move| move_into_check?(move) }
+  end
 
+  def move_into_check?(end_pos)
+    start_pos = self.pos
+    piece_at_end_pos = @board[end_pos]
+    @board.move_piece(self.pos, end_pos)
+    in_check = @board.in_check?(self.color)
+    @board.undo_move_piece(self, start_pos, piece_at_end_pos, end_pos)
+    in_check
   end
 
 end
@@ -165,11 +184,55 @@ end
 class Pawn < Piece
   attr_reader :color, :moves
 
+  DIRECTIONS = {
+    black: [[2, 0], [1, 0], [1, 1], [1, -1]],
+    white: [[-2, 0], [-1, 0], [-1, 1], [-1, -1]]
+  }
+
   def initialize(pos, board, color)
     @color = color
     @symbol = color == :black ? "\u265F" : "\u2659"
-    @moves = []
     super(pos, board, @symbol)
+  end
+
+  def moves
+    @moves = DIRECTIONS[self.color].map { |move| [move[0] + self.pos[0], move[1] + self.pos[1]] }
+    @moves.select! { |pos| @board.in_bounds?(pos) }
+    @moves = self.color == :black ? valid_black_moves : valid_white_moves
+  end
+
+  def valid_moves
+    @moves.reject { |move| move_into_check?(move) }
+  end
+
+  def valid_black_moves
+    valid = []
+    @moves.each do |move|
+      if self.pos[0] == 1 && self.pos[1] == move[1] && (move[0] - self.pos[0]) == 2
+        next unless @board[[2, self.pos[1]]].is_a?(NullPiece)
+        valid << move if @board[move].is_a?(NullPiece)
+      elsif self.pos[1] == move[1]
+        valid << move if @board[move].is_a?(NullPiece)
+      else
+        valid << move if @board[move].color == :white
+      end
+    end
+    valid
+  end
+
+  def valid_white_moves
+    valid = []
+    @moves.each do |move|
+      if self.pos[0] == 6 && self.pos[1] == move[1] && (self.pos[0] - move[0]) == 2
+        next unless @board[[5, self.pos[1]]].is_a?(NullPiece)
+        valid << move if @board[move].is_a?(NullPiece)
+      elsif self.pos[1] == move[1]
+        valid << move if @board[move].is_a?(NullPiece)
+      else
+        valid << move if @board[move].color == :black
+      end
+    end
+    valid
   end
 end
 

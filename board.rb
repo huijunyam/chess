@@ -70,6 +70,11 @@ class Board
     self[start_pos] = NullPiece.instance
   end
 
+  def undo_move_piece(start_piece, start_pos, end_piece, end_pos)
+    self[start_pos] = start_piece
+    self[end_pos] = end_piece
+  end
+
   def [](pos)
     row, col = pos
     @grid[row][col]
@@ -85,7 +90,9 @@ class Board
   end
 
   def in_check?(color)
+    pos = find_king(color)
     @grid.each do |row|
+      # byebug
       if row.any? { |piece| piece.color != color && piece.moves.include?(pos) }
         return true
       end
@@ -104,5 +111,13 @@ class Board
     end
     nil
   end
+
+  def checkmate?(color)
+    in_check?(color) &&
+    @grid.flatten.select { |piece| piece.color == color }.all? do |piece|
+      piece.valid_moves.empty?
+    end
+  end
+
 
 end
