@@ -64,8 +64,17 @@ class Board
   end
 
   def move_piece(start_pos, end_pos)
-    # raise ArgumentError.new("No piece at start position") if self[start_pos].is_a?(NullPiece)
-    # raise ArgumentError.new("Piece cannot move there") unless self[start_pos].valid_move?(end_pos)
+    if self[start_pos].is_a?(NullPiece)
+      raise ArgumentError.new("No piece at start position")
+    end
+    unless self[start_pos].valid_moves.include?(end_pos)
+      raise ArgumentError.new("Piece cannot move there")
+    end
+    self[end_pos] = self[start_pos]
+    self[start_pos] = NullPiece.instance
+  end
+
+  def move_piece!(start_pos, end_pos)
     self[end_pos] = self[start_pos]
     self[start_pos] = NullPiece.instance
   end
@@ -92,7 +101,6 @@ class Board
   def in_check?(color)
     pos = find_king(color)
     @grid.each do |row|
-      # byebug
       if row.any? { |piece| piece.color != color && piece.moves.include?(pos) }
         return true
       end
@@ -119,5 +127,18 @@ class Board
     end
   end
 
-
+  def dup
+    dupped = []
+    @grid.each do |row|
+      dup_row = []
+      row.each do |el|
+        dup_row << el
+      end
+      dupped << dup_row
+    end
+    dupped.each do |row|
+      row.map! {|piece| piece.dup(dupped)}
+    end
+    dupped
+  end
 end

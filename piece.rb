@@ -15,7 +15,8 @@ module SlidingPiece
     end
     directions.select! { |pos| @board.in_bounds?([pos[0] + self.pos[0], pos[1] + self.pos[1]]) }
     directions.select! { |move| self.unblocked_move?(move[0], move[1]) }
-    directions.map { |pos| [pos[0] + self.pos[0], pos[1] + self.pos[1]] }
+    moves = directions.map { |pos| [pos[0] + self.pos[0], pos[1] + self.pos[1]] }
+    moves.select { |move| @board[move].color != self.color }
   end
 
   def horizontal_vertical_dirs
@@ -52,22 +53,22 @@ module SlidingPiece
 
   def check_diagonal(dx, dy)
     if dx > 0 && dy > 0
-      dy.times do |i|
+      (dy - 1).times do |i|
         next_pos = [self.pos.first + (i + 1), self.pos.last + (i + 1)]
         return false unless board[next_pos].is_a?(NullPiece)
       end
     elsif dx < 0 && dy < 0
-      dy.abs.times do |i|
+      (dy.abs - 1).times do |i|
         next_pos = [self.pos.first - (i + 1), self.pos.last - (i + 1)]
         return false unless board[next_pos].is_a?(NullPiece)
       end
     elsif dx > 0 && dy < 0
-      dx.times do |i|
+      (dx - 1).times do |i|
         next_pos = [self.pos.first + (i + 1), self.pos.last - (i + 1)]
         return false unless board[next_pos].is_a?(NullPiece)
       end
     elsif dx < 0 && dy > 0
-      dy.times do |i|
+      (dy - 1).times do |i|
         next_pos = [self.pos.first - (i + 1), self.pos.last + (i + 1)]
         return false unless board[next_pos].is_a?(NullPiece)
       end
@@ -77,12 +78,12 @@ module SlidingPiece
 
   def check_vertical(dy)
     if dy < 0
-      dy.abs.times do |i|
+      (dy.abs - 1).times do |i|
         next_pos = [self.pos.first, self.pos.last - (i + 1)]
         return false unless board[next_pos].is_a?(NullPiece)
       end
     else
-      dy.times do |i|
+      (dy - 1).times do |i|
         next_pos = [self.pos.first, self.pos.last + (i + 1)]
         return false unless board[next_pos].is_a?(NullPiece)
       end
@@ -92,12 +93,12 @@ module SlidingPiece
 
   def check_horizontal(dx)
     if dx < 0
-      dx.abs.times do |i|
+      (dx.abs - 1).times do |i|
         next_pos = [self.pos.first - (i + 1), self.pos.last]
         return false unless board[next_pos].is_a?(NullPiece)
       end
     else
-      dx.times do |i|
+      (dx - 1).times do |i|
         next_pos = [self.pos.first + (i + 1), self.pos.last]
         return false unless board[next_pos].is_a?(NullPiece)
       end
@@ -129,7 +130,7 @@ module SteppingPiece
 end
 
 class Piece
-  attr_reader :moves, :pos, :board
+  attr_reader :moves, :pos, :board, :valid_moves, :symbol
 
   def initialize(pos, board, symbol)
     @pos = pos
@@ -137,22 +138,23 @@ class Piece
     @symbol = symbol
   end
 
-  def moves
-    @moves
-  end
-
   def to_s
     @symbol
   end
 
+  def dup(board)
+    Piece.new(pos.dup, board, symbol)
+  end
+
   def valid_moves
-    self.moves.reject { |move| move_into_check?(move) }
+    moves = self.moves
+    moves.reject { |move| move_into_check?(move) }
   end
 
   def move_into_check?(end_pos)
     start_pos = self.pos
     piece_at_end_pos = @board[end_pos]
-    @board.move_piece(self.pos, end_pos)
+    @board.move_piece!(self.pos, end_pos)
     in_check = @board.in_check?(self.color)
     @board.undo_move_piece(self, start_pos, piece_at_end_pos, end_pos)
     in_check
@@ -182,7 +184,7 @@ class Knight < Piece
 end
 
 class Pawn < Piece
-  attr_reader :color, :moves
+  attr_reader :color, :moves, :valid_moves
 
   DIRECTIONS = {
     black: [[2, 0], [1, 0], [1, 1], [1, -1]],
@@ -202,7 +204,8 @@ class Pawn < Piece
   end
 
   def valid_moves
-    @moves.reject { |move| move_into_check?(move) }
+    moves = self.moves
+    moves.reject { |move| move_into_check?(move) }
   end
 
   def valid_black_moves

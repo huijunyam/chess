@@ -27,9 +27,9 @@ class Display
         print el.to_s.colorize(:background => :blue)
       else
         if i.even?
-          print el.to_s.colorize(:background => :white)
+          print el.to_s#.colorize(:background => :white)
         else
-          print el.to_s.colorize(:background => :black)
+          print el.to_s#.colorize(:background => :black)
         end
       end
       print " | "
@@ -43,9 +43,9 @@ class Display
         print el.to_s.colorize(:background => :blue)
       else
         if i.odd?
-          print el.to_s.colorize(:background => :white)
+          print el.to_s#.colorize(:background => :white)
         else
-          print el.to_s.colorize(:background => :black)
+          print el.to_s#.colorize(:background => :black)
         end
       end
       print " | "
